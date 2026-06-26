@@ -1,4 +1,10 @@
-import { observable, Observable } from "./index.js";
+/**
+ * Demo 1: Basic @observable
+ * Shows: getter/setter interception, change callbacks, subscriber pattern.
+ *
+ * Run: npx tsx src/examples/01-observable.ts
+ */
+import { observable, Observable } from "../index.js";
 
 class Person {
     @observable name: string = "John";
@@ -15,13 +21,13 @@ class Person {
 
 const p = new Person();
 
-// --- Demo 1: propertyChanged callbacks ---
-console.log("=== Demo 1: Change Callbacks ===");
+// --- Change Callbacks ---
+console.log("=== Change Callbacks ===");
 p.name = "Jane";
 p.age = 25;
 
-// --- Demo 2: Subscriber pattern ---
-console.log("\n=== Demo 2: Subscribers ===");
+// --- Subscriber pattern ---
+console.log("\n=== Subscribers ===");
 const notifier = Observable.getNotifier(p);
 
 notifier.subscribe(
@@ -39,8 +45,8 @@ p.name = "Alice";
 console.log("\nSetting age to 30:");
 p.age = 30;
 
-// --- Demo 3: No notification if value unchanged ---
-console.log("\n=== Demo 3: No-op on same value ===");
+// --- No-op on same value ---
+console.log("\n=== No-op on same value ===");
 console.log("Setting name to 'Alice' again (should be silent):");
 p.name = "Alice";
 console.log("(nothing printed = correct)");
