@@ -53,8 +53,8 @@ class Binding<TSource> implements Directive, Subscriber {
 export class View<TSource = any> {
     private fragment: DocumentFragment;
     private directives: Directive[] = [];
-    private first: Node | null = null;
-    private last: Node | null = null;
+    public first: Node | null = null;
+    public last: Node | null = null;
 
     constructor(fragment: DocumentFragment, values: (TemplateExpression<TSource> | DirectiveFactory)[]) {
         this.fragment = fragment;
@@ -240,6 +240,147 @@ export function when<TSource = any>(
 ): DirectiveFactory {
     const factory = (anchor: Comment): WhenDirective<TSource> =>
         new WhenDirective(condition, template, anchor);
+
+    factory.__isDirectiveFactory = true;
+    return factory as DirectiveFactory;
+}
+
+// ─── RepeatDirective ─────────────────────────────────────────────────────────
+
+function observeArray<T>(
+    array: T[],
+    callbacks: {
+        onPush: (items: T[]) => void;
+        onSplice: (index: number, removedCount: number, added: T[]) => void;
+        onPop: () => void;
+    }
+): void {
+    const origPush = array.push;
+    const origSplice = array.splice;
+    const origPop = array.pop;
+
+    array.push = function (...items: T[]) {
+        const result = origPush.apply(this, items);
+        callbacks.onPush(items);
+        return result;
+    };
+
+    array.splice = function (start: number, deleteCount?: number, ...items: T[]) {
+        const result = origSplice.call(this, start, deleteCount ?? 0, ...items);
+        callbacks.onSplice(start, result.length, items);
+        return result;
+    };
+
+    array.pop = function () {
+        const result = origPop.call(this);
+        if (result !== undefined) {
+            callbacks.onPop();
+        }
+        return result;
+    };
+}
+
+class RepeatDirective<TSource, TItem> implements Directive, Subscriber {
+    private watcher: ExpressionWatcher<TSource, TItem[]>;
+    private views: View<TItem>[] = [];
+    private source: TSource | undefined = undefined;
+    private items: TItem[] = [];
+
+    constructor(
+        private itemsExpression: Expression<TSource, TItem[]>,
+        private template: ViewTemplate<TItem>,
+        private anchor: Comment
+    ) {
+        this.watcher = Observable.binding(itemsExpression, this);
+    }
+
+    bind(source: TSource): void {
+        this.source = source;
+        const items = this.watcher.observe(source) ?? [];
+        this.items = items;
+        this.renderAll(items);
+        this.patchArray(items);
+    }
+
+    unbind(): void {
+        this.watcher.dispose();
+        this.removeAll();
+    }
+
+    handleChange(): void {
+        const newItems = this.watcher.observe(this.source!) ?? [];
+
+        this.removeAll();
+        this.items = newItems;
+        this.renderAll(newItems);
+        this.patchArray(newItems);
+    }
+
+    private renderAll(items: TItem[]): void {
+        for (const item of items) {
+            this.createAndInsertView(item);
+        }
+    }
+
+    private removeAll(): void {
+        for (const view of this.views) {
+            view.unbind();
+            view.remove();
+        }
+        this.views = [];
+    }
+
+    private createAndInsertView(item: TItem): View<TItem> {
+        const view = this.template.create(item);
+        view.insertBefore(this.anchor);
+        this.views.push(view);
+        return view;
+    }
+
+    private patchArray(items: TItem[]): void {
+        observeArray(items, {
+            onPush: (added) => {
+                for (const item of added) {
+                    this.createAndInsertView(item);
+                }
+            },
+            onSplice: (index, removedCount, added) => {
+                const removed = this.views.splice(index, removedCount);
+                for (const view of removed) {
+                    view.unbind();
+                    view.remove();
+                }
+
+                const insertAnchor =
+                    index < this.views.length
+                        ? this.views[index].first!
+                        : this.anchor;
+
+                for (let i = 0; i < added.length; i++) {
+                    const view = this.template.create(added[i]);
+                    view.insertBefore(insertAnchor);
+                    this.views.splice(index + i, 0, view);
+                }
+            },
+            onPop: () => {
+                const view = this.views.pop();
+                if (view) {
+                    view.unbind();
+                    view.remove();
+                }
+            },
+        });
+    }
+}
+
+// ─── repeat factory ──────────────────────────────────────────────────────────
+
+export function repeat<TSource = any, TItem = any>(
+    items: Expression<TSource, TItem[]>,
+    template: ViewTemplate<TItem>
+): DirectiveFactory {
+    const factory = (anchor: Comment): RepeatDirective<TSource, TItem> =>
+        new RepeatDirective(items, template, anchor);
 
     factory.__isDirectiveFactory = true;
     return factory as DirectiveFactory;
