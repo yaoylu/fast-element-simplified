@@ -105,7 +105,7 @@ export class ExpressionWatcher<TSource = any, TReturn = any>
     implements Subscriber
 {
     private needsRefresh: boolean = true;
-    private source: TSource | undefined = undefined;
+    public source: TSource | undefined = undefined;
 
     private first: SubscriptionRecord = this as any;
     private last: SubscriptionRecord | null = null;
