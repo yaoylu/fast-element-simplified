@@ -23,7 +23,7 @@ const counter = new Counter();
 // ===========================================
 console.log("=== Template Binding ===");
 
-const template = html<Counter>`<p>${x => x.label}: ${x => x.count}</p>`;
+const template = html<Counter>`<p>${(x: Counter) => x.label}: ${(x: Counter) => x.count}</p>`;
 const view = template.render(counter, document.getElementById("app")!);
 
 console.log("Initial:", document.getElementById("app")!.innerHTML);
