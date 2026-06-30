@@ -1,6 +1,6 @@
 # fast-element-simplified
 
-Simplified [FAST Element](https://github.com/nicknisi/coreux-components/tree/main/packages/fast-element) implementation for learning. Builds up the core concepts from scratch — observable properties, dependency tracking, templating, directives, and custom elements.
+Simplified [FAST Element](https://github.com/microsoft/fast) implementation for learning. Builds up the core concepts from scratch — observable properties, dependency tracking, templating, directives, and custom elements.
 
 ## What's included
 
