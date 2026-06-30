@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo 6: FASTElement Component</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        h1 { font-size: 1.4em; }
+        .controls { margin: 16px 0; }
+        button { padding: 6px 12px; margin-right: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Demo 6: FASTElement Component</h1>
+
+    <my-counter count="0"></my-counter>
+
+    <div class="controls">
+        <button onclick="document.querySelector('my-counter').increment()">+1</button>
+        <button onclick="document.querySelector('my-counter').decrement()">-1</button>
+        <button onclick="document.querySelector('my-counter').setAttribute('count', '99')">Set attr=99</button>
+        <button onclick="document.querySelector('my-counter').label = 'Points'">label="Points"</button>
+    </div>
+
+    <script type="module" src="./06-component.js"></script>
+</body>
+</html>

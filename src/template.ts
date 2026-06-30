@@ -232,6 +232,20 @@ export function html<TSource = any>(
     return new ViewTemplate(htmlString, allValues);
 }
 
+// ─── css tagged template ─────────────────────────────────────────────────────
+
+export function css(
+    strings: TemplateStringsArray,
+    ...values: any[]
+): string {
+    let result = strings[0];
+    for (let i = 0; i < values.length; i++) {
+        result += String(values[i] ?? "");
+        result += strings[i + 1];
+    }
+    return result;
+}
+
 // ─── when directive ───────────────────────────────────────────────────────────
 
 export function when<TSource = any>(
